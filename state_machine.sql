@@ -59,7 +59,7 @@ begin
 end;
 $$ language plpgsql;
 
-create function lib_fsm.state_machine_transition(state_machine__id uuid, event varchar(30), dry_run boolean default false) returns record as $$
+create function lib_fsm.state_machine_transition(state_machine__id$ uuid, event$ varchar(30), dry_run$ boolean default false) returns record as $$
 declare
    to_state record;
 begin
@@ -69,8 +69,8 @@ begin
     from lib_fsm.state_machine sm
     inner join lib_fsm.abstract_transition abtr on abtr.from_abstract_state__id = sm.abstract_state__id
     inner join lib_fsm.abstract_state ast on ast.abstract_state__id = abtr.to_abstract_state__id
-    where sm.state_machine__id = state_machine_transition.state_machine__id
-      and abtr.event = state_machine_transition.event;
+    where sm.state_machine__id = state_machine__id$
+      and abtr.event = event$;
 
   -- if no next state => raise an exception
   if not found then
@@ -79,29 +79,26 @@ begin
   end if;
 
   -- if dry_run mode stop there and yield the to_state record
-  if dry_run = true then
+  if dry_run$ = true then
     return to_state;
   end if;
 
   -- update state machine to next state
   update lib_fsm.state_machine set abstract_state__id = to_state.abstract_state__id
-    where state_machine.state_machine__id = state_machine_transition.state_machine__id;
+    where state_machine.state_machine__id = state_machine__id$;
 
   return to_state;
 end;
 $$ language plpgsql;
 
-create function lib_fsm.state_machine_get_next_transitions(state_machine__id uuid) returns record as $$
--- can yield an empty array []
-declare
-  transitions record;
+create function lib_fsm.state_machine_get_next_transitions(state_machine__id$ uuid) returns setof lib_fsm.abstract_state_machine_transition as $$
 begin
-
-  select asmt.* from lib_fsm.abstract_state_machine_transition asmt where asmt.from_abstract_state__id = (
-    select abstract_state__id
-      from lib_fsm.state_machine sm
-      where sm.state_machine__id = state_machine_get_next_transitions.state_machine__id
-  );
-  return transitions;
+  return query select asmt.*
+    from lib_fsm.abstract_state_machine_transition asmt
+    where asmt.from_abstract_state__id = (
+        select abstract_state__id
+          from lib_fsm.state_machine sm
+          where sm.state_machine__id = state_machine__id$
+      );
 end;
 $$ language plpgsql;

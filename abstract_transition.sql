@@ -38,14 +38,13 @@ create trigger ensure_from_and_to_state_have_same_machine__id
 execute procedure lib_fsm.ensure_from_and_to_state_have_same_machine__id();
 
 create or replace function lib_fsm.abstract_transition_create(
-    abstract_machine__id uuid,
-    from_abstract_state__id uuid,
-    event varchar(30),
-    to_abstract_state__id uuid,
-    description text default null
+    from_abstract_state__id$ uuid,
+    event$ varchar(30),
+    to_abstract_state__id$ uuid,
+    description$ text default null
 ) returns void as $$
 begin
     insert into lib_fsm.abstract_transition(from_abstract_state__id, to_abstract_state__id, event, description)
-        values (from_abstract_state__id, to_abstract_state__id, event, description);
+        values (from_abstract_state__id$, to_abstract_state__id$, event$, description$);
 end;
 $$ language plpgsql;

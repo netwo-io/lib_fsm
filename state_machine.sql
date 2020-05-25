@@ -91,17 +91,17 @@ begin
 end;
 $$ language plpgsql;
 
-create function lib_fsm.state_machine_get_transitions(state_machine__id uuid) returns jsonb as $$
+create function lib_fsm.state_machine_get_next_transitions(state_machine__id uuid) returns record as $$
 -- can yield an empty array []
 declare
-  transitions jsonb;
+  transitions record;
 begin
 
-  --select * from lib_fsm.abstract_state_machine_transition where abstract_machine_id = (
-  --  select abstract_machine_id
-  --  from lib_fsm.state_machine sm
-  --  where sm.state_machine__id = state_machine_get_transitions.state_machine__id
-  --);
+  select asmt.* from lib_fsm.abstract_state_machine_transition asmt where asmt.from_abstract_state__id = (
+    select abstract_state__id
+      from lib_fsm.state_machine sm
+      where sm.state_machine__id = state_machine_get_next_transitions.state_machine__id
+  );
   return transitions;
 end;
 $$ language plpgsql;

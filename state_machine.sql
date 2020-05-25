@@ -37,7 +37,7 @@ declare
   state record;
 begin
 
-  select name, description into state
+  select abstract_state__id, name, description into state
     from lib_fsm.state_machine
     inner join lib_fsm.abstract_state using (abstract_state__id)
     where  lib_fsm.state_machine.state_machine__id = state_machine_get.state_machine__id;
@@ -97,7 +97,11 @@ declare
   transitions jsonb;
 begin
 
-  select * from lib_fsm.abstract_state_machine_transition
+  --select * from lib_fsm.abstract_state_machine_transition where abstract_machine_id = (
+  --  select abstract_machine_id
+  --  from lib_fsm.state_machine sm
+  --  where sm.state_machine__id = state_machine_get_transitions.state_machine__id
+  --);
   return transitions;
 end;
 $$ language plpgsql;

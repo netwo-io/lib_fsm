@@ -1,0 +1,165 @@
+=== Finite State Machine (FSM) library for PostgreSQL
+
+==== Features
+
+- Multi-tenant: each row/column can reference a state in another state state machine
+- User FSM support: let your user specify their own state machine
+- Complete API with stored functions
+- Visual graph generation
+- Tested
+
+==== Convention
+
+A finite state machine has `states`, `events` and `transitions`.
+
+A state machine can go from one `state` to another `state` through a `transition`.
+State change is triggered with an `event`.
+
+A transition is a tuple of a start (previous) `state`, the `event` that will trigger the transition and a next `state`.
+
+An `abstract state machine` describe a `state machine`, its `(abstract) state` and `(abstract) transition`.
+
+A `state machine` is an instance of an `abstract state machine` and points to an `abstract state`, thus an `abstract state machine`.
+
+
+[caption="Figure 1: ",link=model.png]
+image::model.png[FSM_lib model,1644,484]
+
+==== Naming convention
+
+A consistent naming convention is essential to build a futur-proof project.
+Use https://github.com/FGRibreau/sql-convention/[shared SQL convention] as well as an SQL linter.
+
+[#_states]
+====== `state` name
+
+- must be a verb
+- verb tense must be either at the simple past (+ed) or at present progressive (+ing)
+- lower-case
+- snake_case if multiple words (e.g. `locked_out`)
+
+Examples: opened, loading, loaded, recorded, closed, locked, dumped, shipped, finished, running, failed, entered, enabled, disabled, approved, published, archived, activated, pending, pending_renewal, expired, ordered, canceled, returned, refunded, checked_out
+
+[#_event]
+====== `event` name
+
+- should be a single word (use snake_case otherwise)
+- must be a verb
+- verb tense must be infinitive
+- lower-case
+
+Examples: start, open, close, lock, unlock, load, unload, dump, ship, fail, enter, enable, disable, run, return, order, cancel, refund, confirm
+
+==== API
+
+Features:
+*  immutable (accès à la ligne en cours ? Comment ? via l'oid ?)
+*  multi-tenant
+*  state machine can be user-defined (as soon as the FSM becomes user-defined, application code will need to persist the information somewhere)
+*  calls pg_notify on state change
+
+transition = (from_state,
+              name,
+              description
+              to_state,
+              properties, <= WONT_IMPLEMENT
+              triggers (0-N, what events should automatically triggers the transition), <= MUST_LATER [ Quand un évènement est reçu, est, "orange.order.confirmed" ET "OI, =, Orange" ]
+              conditions (0-N (cf: ui-predicate)), <= MUST_LATER => based on rules_engine
+              pre_conditions (0-N, these pre-conditions are run BEFORE displaying available events from 'from_state'), <= WONT_IMPLEMENT
+              post_actions (0-N, what to do once we switched to `to_state`) <= WONT_IMPLEMENT
+
+=== What was tried before current implementation
+
+"Why did they do that?" "I would not have done this way".
+
+==== Try #1 Listen to every table column changes
+
+A trigger on every tables that when for updated colunm that have a custom type like `lib_fsm.state_machine`.
+
+*Conclusion*
+Custom types in PostgreSQL requires a C extension.
+C extension are not supported in managed environments.
+
+Rejected.
+
+==== Try #2 Composite type
+
+It's the previous idea but instead of a custom type, we rely on a composite type (`last_state` + `abstract_machine__id`).
+
+- Pros:
+     - Easier to maintain
+     - Does not need column names convention
+- Cons:
+     - No foreign key on abstract_machine__id (ensure referential integrity with a trigger)
+     - No foreign key on abstract_machine__id (ensuring referential integrity with a trigger would require a schema introspection to retrieve all columns of type lib_fsm.state_machine.abstract_machine__id === old.abstract_machine__id)
+
+Rejected.
+
+==== Try #3 External table to store every states
+
+Externalize each machine current states to an independent table.
+Each state is liked to a finie state machine (see `abstract state machine`).
+
+- Cons:
+     - Hard to keep referential integrity
+     - Looking at a table, you don't know if it has linked field (like a status field) in the lib_fsm.state_machine table
+
+tried custom type but:
+ - they must be coded in a low level language (C-like)
+ - we are planning to leverage a managed PostgreSQL provider so we won"t be able to load our own C-extensions
+
+create table lib_fsm.test_contract_version_option_1(
+    contract_version__id uuid      not null primary key default public.gen_random_uuid(),
+    contract__id         uuid      not null references contract_manager.contract (contract__id) on delete cascade on update cascade,
+    validity             tstzrange not null             default tstzrange(now(), 'infinity'), -- [start_date; +inf[  [start_date; end_date]
+    status1              lib_fsm.state_machine not null,
+    status2              lib_fsm.state_machine not null,
+    description          text check (length(description) > 10 and length(description) < 500)
+);
+
+-- create table lib_fsm.test_contract_version_option2(
+--     contract_version__id uuid      not null primary key default public.gen_random_uuid(),
+--     contract__id         uuid      not null references contract_manager.contract (contract__id) on delete cascade on update cascade,
+--     validity             tstzrange not null             default tstzrange(now(), 'infinity'), -- [start_date; +inf[  [start_date; end_date]
+--     status1              lib_fsm.state_machine not null,
+--     status1__abstract_machine__id uuid not null references lib_fsm.abstract_state_machine(abstract_machine__id) on delete cascade on update cascade,
+--     status2              lib_fsm.state_machine not null,
+--     status1__abstract_machine__id uuid not null references lib_fsm.abstract_state_machine(abstract_machine__id) on delete cascade on update cascade,
+--     description          text check (length(description) > 10 and length(description) < 500)
+-- );
+--
+-- create table lib_fsm.test_contract_version_option3(
+--     contract_version__id uuid      not null primary key default public.gen_random_uuid(),
+--     contract__id         uuid      not null references contract_manager.contract (contract__id) on delete cascade on update cascade,
+--     validity             tstzrange not null             default tstzrange(now(), 'infinity'), -- [start_date; +inf[  [start_date; end_date]
+--     description          text check (length(description) > 10 and length(description) < 500)
+--     abstract_machine__id
+--     status
+-- );
+
+create table lib_fsm.state_machine_option3(
+  table_id oid , -- references
+  primary_key ,  -- references
+  state varchar(30)
+);
+
+@todo : Selon les règles métier définies, contrainte d'unicité à écrire (un seul draft par contrat à un instant T ?)
+
+--
+-- <<< Orange : tel produit est confirmé (ref_commande, ref_produit, status=confirmé)
+-- call POST /events
+--  {
+--      oi:
+--      event: 'order.confirmed',
+--      object__id: '',
+--      status: ''
+--  }
+
+
+-- trigger delete on lib_fsm.abstract_state_machine
+--     -> schema -> columns -> lib_fsm.state_machine -> filter machine_id == old.row
+
+==== Previous work
+
+- https://felixge.de/2017/07/27/implementing-state-machines-in-postgresql.html
+- https://raphael.medaer.me/2019/06/12/pgfsm.html

@@ -52,6 +52,25 @@ begin
 end;
 $$ language plpgsql;
 
+-- Return a mermaid graph
+create or replace function lib_fsm.state_machine_get_mermaid(abstract_state_machine__id$ uuid) returns text as
+$$
+declare
+    diagram text;
+    rec record;
+begin
+    diagram = '';
+    for rec in select from_state_name, to_state_name, event, description
+               from lib_fsm.abstract_state_machine_transition asmt
+               where asmt.abstract_machine__id = abstract_state_machine__id$
+        loop
+            diagram = concat(diagram, '\n\t', rec.from_state_name, ' --> ', rec.to_state_name, ' : ', coalesce(rec.description, rec.event), '\n\t');
+        end loop;
+
+    return concat('stateDiagram\n\t', diagram);
+end;
+$$ language plpgsql;
+
 create or replace function lib_fsm.state_machine_delete(state_machine__id$ uuid) returns void as $$
 begin
   delete from lib_fsm.state_machine

@@ -5,7 +5,7 @@
 - Multi-tenant: each row/column can reference a state in another state state machine
 - User FSM support: let your user specify their own state machine
 - Complete API with stored functions
-- Visual graph generation
+- #_visual_graph_generation[Visual graph generation]
 - Tested
 
 ==== Convention
@@ -158,6 +158,13 @@ create table lib_fsm.state_machine_option3(
 
 -- trigger delete on lib_fsm.abstract_state_machine
 --     -> schema -> columns -> lib_fsm.state_machine -> filter machine_id == old.row
+
+[#_visual_graph_generation]
+==== Visual documentation generator
+
+```bash
+PGPASSWORD=$USER_PASSWORD psql  -qtAX  -U $USER --password -c "select lib_fsm.state_machine_get_mermaid('081d831f-8f88-4650-aebe-4360599d4bdc') as mermaid;"
+```
 
 ==== Previous work
 

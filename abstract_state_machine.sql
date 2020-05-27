@@ -6,12 +6,12 @@ create table if not exists lib_fsm.abstract_state_machine
   created_at           timestamptz not null default now()
 );
 
-create or replace function lib_fsm.abstract_machine_create(name$ varchar(30), description$ text default null) returns uuid as $$
+create or replace function lib_fsm.abstract_machine_create(name$ varchar(30), description$ text default null, abstract_machine__id$ uuid default public.gen_random_uuid()) returns uuid as $$
 declare
   id uuid;
 begin
   insert into lib_fsm.abstract_state_machine (abstract_machine__id, name, description)
-    values (default, name$, description$) returning abstract_machine__id into id;
+    values (abstract_machine__id$, name$, description$) returning abstract_machine__id into id;
   return id;
 end;
 $$ language plpgsql;

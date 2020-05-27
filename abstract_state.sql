@@ -49,16 +49,17 @@ create trigger ensure_at_least_one_initial_state_per_abstract_machine
 execute procedure lib_fsm.ensure_at_least_one_initial_state_per_abstract_machine();
 
 create or replace function lib_fsm.abstract_state_create(
-  abstract_machine__id uuid,
-  name varchar(50),
-  description text default null,
-  is_initial boolean default false
+  abstract_machine__id$ uuid,
+  name$ varchar(50),
+  description$ text default null,
+  is_initial$ boolean default false,
+  abstract_state__id$ uuid default public.gen_random_uuid()
 ) returns uuid as $$
 declare
   id uuid;
 begin
   insert into lib_fsm.abstract_state (abstract_state__id, abstract_machine__id, name, description, is_initial)
-    values (default, abstract_machine__id, name, description, is_initial)
+    values (abstract_state__id$, abstract_machine__id$, name$, description$, is_initial$)
     returning abstract_state__id into id;
   return id;
 end;

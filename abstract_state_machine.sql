@@ -6,12 +6,12 @@ create table if not exists lib_fsm.abstract_state_machine
   created_at           timestamptz not null default now()
 );
 
-create or replace function lib_fsm.abstract_machine_create(name$ varchar(30), description$ text default null, abstract_machine__id$ uuid default public.gen_random_uuid()) returns uuid as $$
+create or replace function lib_fsm.abstract_machine_create(name$ varchar(30), description$ text default null, abstract_machine__id$ uuid default public.gen_random_uuid(), created_at$ timestamptz default now()) returns uuid as $$
 declare
   id uuid;
 begin
-  insert into lib_fsm.abstract_state_machine (abstract_machine__id, name, description)
-    values (abstract_machine__id$, name$, description$) returning abstract_machine__id into id;
+  insert into lib_fsm.abstract_state_machine (abstract_machine__id, name, description, created_at)
+    values (abstract_machine__id$, name$, description$, created_at$) returning abstract_machine__id into id;
   return id;
 end;
 $$ language plpgsql;
@@ -19,8 +19,8 @@ $$ language plpgsql;
 create or replace function lib_fsm.abstract_machine_update(abstract_machine__id$ uuid, name$ varchar(30), description$ text default null) returns void as $$
 begin
   update lib_fsm.abstract_state_machine asm
-  set name = name$, description = description$
-  where asm.abstract_machine__id = abstract_machine__id$;
+    set name = name$, description = description$
+    where asm.abstract_machine__id = abstract_machine__id$;
 
   if not found then
     raise sqlstate '42P01' using

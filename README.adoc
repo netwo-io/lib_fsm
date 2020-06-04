@@ -25,8 +25,6 @@ A `state machine` is an instance of an `abstract state machine` and points to an
 [caption="Figure 1: ",link=model.png]
 image::model.png[FSM_lib model,1644,484]
 
-==== Naming convention
-
 A consistent naming convention is essential to build a futur-proof project.
 Use https://github.com/FGRibreau/sql-convention/[shared SQL convention] as well as an SQL linter.
 
@@ -51,22 +49,6 @@ Examples: opened, loading, loaded, recorded, closed, locked, dumped, shipped, fi
 Examples: start, open, close, lock, unlock, load, unload, dump, ship, fail, enter, enable, disable, run, return, order, cancel, refund, confirm
 
 ==== API
-
-Features:
-*  immutable (accès à la ligne en cours ? Comment ? via l'oid ?)
-*  multi-tenant
-*  state machine can be user-defined (as soon as the FSM becomes user-defined, application code will need to persist the information somewhere)
-*  calls pg_notify on state change
-
-transition = (from_state,
-              name,
-              description
-              to_state,
-              properties, <= WONT_IMPLEMENT
-              triggers (0-N, what events should automatically triggers the transition), <= MUST_LATER [ Quand un évènement est reçu, est, "orange.order.confirmed" ET "OI, =, Orange" ]
-              conditions (0-N (cf: ui-predicate)), <= MUST_LATER => based on rules_engine
-              pre_conditions (0-N, these pre-conditions are run BEFORE displaying available events from 'from_state'), <= WONT_IMPLEMENT
-              post_actions (0-N, what to do once we switched to `to_state`) <= WONT_IMPLEMENT
 
 === What was tried before current implementation
 
@@ -165,6 +147,14 @@ create table lib_fsm.state_machine_option3(
 ```bash
 PGPASSWORD=$USER_PASSWORD psql  -qtAX  -U $USER --password -c "select lib_fsm.state_machine_get_mermaid('081d831f-8f88-4650-aebe-4360599d4bdc') as mermaid;"
 ```
+
+==== Next steps
+
+- [ ] add support for transition `properties`
+- [ ] add support for transition `triggers`: 0-N triggers, what events should automatically trigger the transition
+- [ ] add support for transition `conditions`: 0-N (cf: [https://github.com/FGRibreau/ui-predicate/]ui-predicate)), requires `lib_rule_engine` first
+- [ ] add support for transition `pre_conditions`: 0-N, these pre-conditions are run before displaying available events from 'from_state'
+post_actions (0-N, what to do once we switched to `to_state`) <= WONT_IMPLEMENT
 
 ==== Previous work
 

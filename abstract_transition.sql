@@ -41,10 +41,11 @@ create or replace function lib_fsm.abstract_transition_create(
   from_abstract_state__id$ uuid,
   event$ varchar(30),
   to_abstract_state__id$ uuid,
-  description$ text default null
+  description$ text default null,
+  created_at$ timestamptz default now()
 ) returns void as $$
 begin
-  insert into lib_fsm.abstract_transition(from_abstract_state__id, to_abstract_state__id, event, description)
-    values (from_abstract_state__id$, to_abstract_state__id$, event$, description$);
+  insert into lib_fsm.abstract_transition(from_abstract_state__id, to_abstract_state__id, event, description, created_at)
+    values (from_abstract_state__id$, to_abstract_state__id$, event$, description$, created_at$);
 end;
 $$ language plpgsql;

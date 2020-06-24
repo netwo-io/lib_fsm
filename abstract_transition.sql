@@ -1,14 +1,14 @@
 create table lib_fsm.abstract_transition
 (
-  from_abstract_state__id uuid        not null,
-  to_abstract_state__id   uuid        not null,
-  event                   varchar(30) not null, -- no need to have an external event table
-  description             text        null,
-  created_at              timestamptz not null default now(),
-  foreign key (from_abstract_state__id) references lib_fsm.abstract_state (abstract_state__id) on delete cascade on update cascade,
-  foreign key (to_abstract_state__id) references lib_fsm.abstract_state (abstract_state__id) on delete cascade on update cascade,
-  unique (from_abstract_state__id, event),
-  primary key (from_abstract_state__id, event, to_abstract_state__id)
+    from_abstract_state__id uuid                     not null,
+    to_abstract_state__id   uuid                     not null,
+    event                   lib_fsm.event_identifier not null, -- no need to have an external event table
+    description             text                     null,
+    created_at              timestamptz              not null default now(),
+    foreign key (from_abstract_state__id) references lib_fsm.abstract_state (abstract_state__id) on delete cascade on update cascade,
+    foreign key (to_abstract_state__id) references lib_fsm.abstract_state (abstract_state__id) on delete cascade on update cascade,
+    unique (from_abstract_state__id, event),
+    primary key (from_abstract_state__id, event, to_abstract_state__id)
 );
 
 create or replace function lib_fsm.ensure_from_and_to_state_have_same_machine__id() returns trigger as $$
@@ -37,13 +37,11 @@ create trigger ensure_from_and_to_state_have_same_machine__id
     for each row
 execute procedure lib_fsm.ensure_from_and_to_state_have_same_machine__id();
 
-create or replace function lib_fsm.abstract_transition_create(
-  from_abstract_state__id$ uuid,
-  event$ varchar(30),
-  to_abstract_state__id$ uuid,
-  description$ text default null,
-  created_at$ timestamptz default now()
-) returns void as $$
+create or replace function lib_fsm.abstract_transition_create(from_abstract_state__id$ uuid,
+                                                              event$ lib_fsm.event_identifier,
+                                                              to_abstract_state__id$ uuid,
+                                                              description$ text default null,
+                                                              created_at$ timestamptz default now()) returns void as $$
 begin
   insert into lib_fsm.abstract_transition(from_abstract_state__id, to_abstract_state__id, event, description, created_at)
     values (from_abstract_state__id$, to_abstract_state__id$, event$, description$, created_at$);

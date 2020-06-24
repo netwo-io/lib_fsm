@@ -370,7 +370,7 @@ end;]]></definition>
 end;]]></definition>
 </function>
 
-<view name="abstract_state_machine_transition" layer="0" collapse-mode="2" max-obj-count="1">
+<view name="abstract_state_machine_transitions" layer="0" collapse-mode="2" max-obj-count="1">
 	<schema name="lib_fsm"/>
 	<role name="postgres"/>
 	<position x="80" y="360"/>
@@ -419,15 +419,15 @@ end;]]></definition>
 	</reference>
 </view>
 
-<relationship name="rel_abstract_state_machine_transition_abstract_state" type="reltv" layer="0"
+<relationship name="rel_abstract_state_machine_transitions_abstract_state" type="reltv" layer="0"
 	 custom-color="#0a9572"
-	 src-table="lib_fsm.abstract_state_machine_transition"
+	 src-table="lib_fsm.abstract_state_machine_transitions"
 	 dst-table="lib_fsm.abstract_state"
 	 src-required="false" dst-required="false"/>
 
-<relationship name="rel_abstract_state_machine_transition_abstract_transition" type="reltv" layer="0"
+<relationship name="rel_abstract_state_machine_transitions_abstract_transition" type="reltv" layer="0"
 	 custom-color="#d43ed7"
-	 src-table="lib_fsm.abstract_state_machine_transition"
+	 src-table="lib_fsm.abstract_state_machine_transitions"
 	 dst-table="lib_fsm.abstract_transition"
 	 src-required="false" dst-required="false">
 	<label ref-type="name-label">
@@ -616,14 +616,14 @@ end;]]></definition>
 	<role name="postgres"/>
 	<language name="plpgsql" sql-disabled="true"/>
 	<return-type>
-	<type name="lib_fsm.abstract_state_machine_transition" length="1"/>
+	<type name="lib_fsm.abstract_state_machine_transitions" length="1"/>
 	</return-type>
 	<parameter name="state_machine__id$">
 		<type name="uuid" length="0"/>
 	</parameter>
 	<definition><![CDATA[begin
   return query select asmt.*
-    from lib_fsm.abstract_state_machine_transition asmt
+    from lib_fsm.abstract_state_machine_transitions asmt
     where asmt.from_abstract_state__id = (
         select abstract_state__id
           from lib_fsm.state_machine sm

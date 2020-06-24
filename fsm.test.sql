@@ -2,16 +2,16 @@
 
 ---------------------- ABSTRACT STATE MACHINES -----------------------------------------------
 
-create or replace function test.test_case_fsm_abstract_state_machine_create() returns void as $$
+create or replace function lib_test.test_case_fsm_abstract_state_machine_create() returns void as $$
 declare
-  abstract_machine__id uuid;
+    abstract_machine__id uuid;
 begin
-  abstract_machine__id = lib_fsm.abstract_machine_create('creation_order', null);
-  perform test.assertNotNull('abstract machine not created', abstract_machine__id);
+    abstract_machine__id = lib_fsm.abstract_machine_create('creation_order', null);
+    perform lib_test.assert_not_null(abstract_machine__id, 'abstract machine not created');
 end;
 $$ language plpgsql;
 
-create or replace function test.test_case_fsm_abstract_state_machine_update() returns void as $$
+create or replace function lib_test.test_case_fsm_abstract_state_machine_update() returns void as $$
 declare
   abstract_machine__id uuid;
 begin
@@ -20,7 +20,7 @@ begin
 end;
 $$ language plpgsql;
 
-create or replace function test.test_case_fsm_abstract_state_machine_update_with_invalid_id() returns void as $$
+create or replace function lib_test.test_case_fsm_abstract_state_machine_update_with_invalid_id() returns void as $$
 declare
   abstract_machine__id uuid;
 begin
@@ -29,11 +29,11 @@ begin
   exception
     when SQLSTATE '42P01' then return;
   end;
-  perform test.fail('should not go there');
+  perform lib_test.fail('should not go there');
 end;
 $$ language plpgsql;
 
-create or replace function test.test_case_fsm_abstract_state_machine_delete() returns void as $$
+create or replace function lib_test.test_case_fsm_abstract_state_machine_delete() returns void as $$
 declare
   abstract_machine__id uuid;
 begin
@@ -42,14 +42,14 @@ begin
 end;
 $$ language plpgsql;
 
-create or replace function test.test_case_fsm_abstract_state_machine_delete_with_invalid_id_should_not_fail() returns void as $$
+create or replace function lib_test.test_case_fsm_abstract_state_machine_delete_with_invalid_id_should_not_fail() returns void as $$
 begin
   -- this operation must be idempotent
   perform lib_fsm.abstract_machine_delete(public.gen_random_uuid());
 end;
 $$ language plpgsql;
 
-create or replace function test.test_case_fsm_abstract_state_machine_update_empty_name() returns void as $$
+create or replace function lib_test.test_case_fsm_abstract_state_machine_update_empty_name() returns void as $$
 declare
   abstract_machine__id uuid;
 begin
@@ -59,11 +59,11 @@ begin
   exception
     when not_null_violation then return;
   end;
-  perform test.fail('should not go there');
+  perform lib_test.fail('should not go there');
 end;
 $$ language plpgsql;
 
-create or replace function test.test_case_fsm_abstract_state_machine_update_invalid_name() returns void as
+create or replace function lib_test.test_case_fsm_abstract_state_machine_update_invalid_name() returns void as
 $$
 declare
   abstract_machine__id uuid;
@@ -73,50 +73,50 @@ begin
     perform lib_fsm.abstract_machine_update(abstract_machine__id, 'aa', '');
   exception
     when check_violation then return;
-end; perform test.fail('should not go there');
+end; perform lib_test.fail('should not go there');
 end;
 $$ language plpgsql;
 
-create or replace function test.test_case_fsm_abstract_state_machine_create_empty_name() returns void as $$
+create or replace function lib_test.test_case_fsm_abstract_state_machine_create_empty_name() returns void as $$
 begin
   begin
     perform lib_fsm.abstract_machine_create(null, '');
   exception
     when not_null_violation then return;
   end;
-  perform test.fail('should not go there');
+  perform lib_test.fail('should not go there');
 end;
 $$ language plpgsql;
 
-create or replace function test.test_case_fsm_abstract_state_machine_create_invalid_name() returns void as
+create or replace function lib_test.test_case_fsm_abstract_state_machine_create_invalid_name() returns void as
 $$
 begin
   begin
     perform lib_fsm.abstract_machine_create('aa', '');
   exception
     when check_violation then return;
-end; perform test.fail('should not go there');
+end; perform lib_test.fail('should not go there');
 end;
 $$ language plpgsql;
 
 ---------------------- ABSTRACT STATES -----------------------------------------------
 
-create or replace function test.test_case_fsm_abstract_state_create() returns void as
+create or replace function lib_test.test_case_fsm_abstract_state_create() returns void as
 $$
 declare
-  abstract_state__id uuid;
+    abstract_state__id uuid;
 begin
-  abstract_state__id = lib_fsm.abstract_state_create(
-    lib_fsm.abstract_machine_create('creation_order', null),
-    'drafted',
-    'command currently being draft',
-    true);
+    abstract_state__id = lib_fsm.abstract_state_create(
+            lib_fsm.abstract_machine_create('creation_order', null),
+            'drafted',
+            'command currently being draft',
+            true);
 
-  perform test.assertNotNull('function call yield a UUID', abstract_state__id);
+    perform lib_test.assert_not_null(abstract_state__id, 'function call yield a UUID');
 end;
 $$ language plpgsql;
 
-create or replace function test.test_case_fsm_first_abstract_state_must_be_initial() returns void as
+create or replace function lib_test.test_case_fsm_first_abstract_state_must_be_initial() returns void as
 $$
 declare
   abstract_machine__id uuid;
@@ -130,11 +130,11 @@ begin
   exception
     when check_violation then return;
   end;
-  perform test.fail('should not go there');
+  perform lib_test.fail('should not go there');
 end;
 $$ language plpgsql;
 
-create or replace function test.test_case_fsm_no_more_than_one_initial_state_per_abstract_machine() returns void as
+create or replace function lib_test.test_case_fsm_no_more_than_one_initial_state_per_abstract_machine() returns void as
 $$
 declare
   abstract_machine__id uuid;
@@ -149,11 +149,11 @@ begin
   exception
     when unique_violation then return;
   end;
-  perform test.fail('should not go there');
+  perform lib_test.fail('should not go there');
 end;
 $$ language plpgsql;
 
-create or replace function test.test_case_fsm_abstract_state_create_empty_name() returns void as
+create or replace function lib_test.test_case_fsm_abstract_state_create_empty_name() returns void as
 $$
 declare
 begin
@@ -164,11 +164,11 @@ begin
       'command currently being draft', true);
   exception
     when not_null_violation then return;
-  end; perform test.fail('should not go there');
+  end; perform lib_test.fail('should not go there');
 end;
 $$ language plpgsql;
 
-create or replace function test.test_case_fsm_abstract_state_create_invalid_name() returns void as
+create or replace function lib_test.test_case_fsm_abstract_state_create_invalid_name() returns void as
 $$
 declare
 begin
@@ -179,13 +179,13 @@ begin
       'command currently being draft', true);
   exception
     when check_violation then return;
-  end; perform test.fail('should not go there');
+  end; perform lib_test.fail('should not go there');
 end;
 $$ language plpgsql;
 
 ---------------------- ABSTRACT TRANSITIONS --------------------------------------------
 
-create or replace function test.test_case_fsm_transition_create() returns void as
+create or replace function lib_test.test_case_fsm_transition_create() returns void as
 $$
 declare
   abstract_machine__id uuid;
@@ -199,7 +199,7 @@ begin
 end;
 $$ language plpgsql;
 
-create or replace function test.test_case_fsm_transition_create_null_event() returns void as
+create or replace function lib_test.test_case_fsm_transition_create_null_event() returns void as
 $$
 declare
   abstract_machine__id uuid;
@@ -214,11 +214,11 @@ begin
   exception
     when not_null_violation then return;
   end;
-  perform test.fail('should not go there');
+  perform lib_test.fail('should not go there');
 end;
 $$ language plpgsql;
 
-create or replace function test.test_case_fsm_transition_create_invalid_event_name() returns void as
+create or replace function lib_test.test_case_fsm_transition_create_invalid_event_name() returns void as
 $$
 declare
   abstract_machine__id uuid;
@@ -232,7 +232,7 @@ begin
 end;
 $$ language plpgsql;
 
-create or replace function test.test_case_fsm_transition_create_invalid_from_state() returns void as
+create or replace function lib_test.test_case_fsm_transition_create_invalid_from_state() returns void as
 $$
 declare
   abstract_machine__id uuid;
@@ -247,11 +247,11 @@ begin
   exception
     when check_violation then return;
   end;
-  perform test.fail('should not go there');
+  perform lib_test.fail('should not go there');
 end;
 $$ language plpgsql;
 
-create or replace function test.test_case_fsm_transition_create_invalid_to_state() returns void as
+create or replace function lib_test.test_case_fsm_transition_create_invalid_to_state() returns void as
 $$
 declare
   abstract_machine__id uuid;
@@ -266,11 +266,11 @@ begin
   exception
     when check_violation then return;
   end;
-  perform test.fail('should not go there');
+  perform lib_test.fail('should not go there');
 end;
 $$ language plpgsql;
 
-create or replace function test.test_case_fsm_transition_create_invalid_to_and_from_state() returns void as
+create or replace function lib_test.test_case_fsm_transition_create_invalid_to_and_from_state() returns void as
 $$
 declare
   abstract_machine__id uuid;
@@ -285,11 +285,11 @@ begin
   exception
     when check_violation then return;
   end;
-  perform test.fail('should not go there');
+  perform lib_test.fail('should not go there');
 end;
 $$ language plpgsql;
 
-create or replace function test.test_case_fsm_transition_create_when_from_to_state_mismatch() returns void as
+create or replace function lib_test.test_case_fsm_transition_create_when_from_to_state_mismatch() returns void as
 $$
 declare
   abstract_machine__id  uuid;
@@ -306,11 +306,11 @@ begin
   exception
     when check_violation then return;
   end;
-  perform test.fail('should not go there');
+  perform lib_test.fail('should not go there');
 end;
 $$ language plpgsql;
 
-create or replace function test.test_case_fsm_transition_create_with_same_from_and_to() returns void as
+create or replace function lib_test.test_case_fsm_transition_create_with_same_from_and_to() returns void as
 $$
 declare
   abstract_machine__id uuid;
@@ -326,7 +326,7 @@ begin
 end;
 $$ language plpgsql;
 
-create or replace function test.test_case_fsm_transition_create_with_same_from_and_event() returns void as
+create or replace function lib_test.test_case_fsm_transition_create_with_same_from_and_event() returns void as
 $$
 declare
   abstract_machine__id uuid;
@@ -348,40 +348,41 @@ begin
   exception
     when unique_violation then return;
   end;
-  perform test.fail('should not go there');
+  perform lib_test.fail('should not go there');
 end;
 $$ language plpgsql;
 
 ---------------------- STATE MACHINES -----------------------------------------------
 
-create or replace function test.test_case_fsm_state_machine_create_with_abstract_state__id() returns void as
+create or replace function lib_test.test_case_fsm_state_machine_create_with_abstract_state__id() returns void as
 $$
 declare
-  abstract_state__id uuid;
-  state_machine__id uuid;
+    abstract_state__id uuid;
+    state_machine__id  uuid;
 begin
 
-  abstract_state__id = lib_fsm.abstract_state_create(lib_fsm.abstract_machine_create('creation_order', null), 'drafted', '', true);
-  state_machine__id = lib_fsm.state_machine_create(abstract_state__id);
-  perform test.assertNotNull('state machine not created', state_machine__id);
+    abstract_state__id =
+            lib_fsm.abstract_state_create(lib_fsm.abstract_machine_create('creation_order', null), 'drafted', '', true);
+    state_machine__id = lib_fsm.state_machine_create(abstract_state__id);
+    perform lib_test.assert_not_null(state_machine__id, 'state machine not created');
 end;
 $$ language plpgsql;
 
-create or replace function test.test_case_fsm_state_machine_create_with_abstract_state_machine__id() returns void as
+create or replace function lib_test.test_case_fsm_state_machine_create_with_abstract_state_machine__id() returns void as
 $$
 declare
-  state_machine__id uuid;
-  state record;
+    state_machine__id uuid;
+    state             record;
 begin
 
-  state_machine__id = lib_fsm.state_machine_create('081d831f-8f88-4650-aebe-4360599d4bdc'::uuid);
-  perform test.assertNotNull('state machine not created', state_machine__id);
-  state = lib_fsm.state_machine_get(state_machine__id);
-  perform test.assertTrue(state.name = 'starting');
+    state_machine__id = lib_fsm.state_machine_create('081d831f-8f88-4650-aebe-4360599d4bdc'::uuid);
+    perform lib_test.assert_not_null(state_machine__id, 'state machine not created');
+    state = lib_fsm.state_machine_get(state_machine__id);
+    perform lib_test.assert_true(state.name = 'starting');
 end;
 $$ language plpgsql;
 
-create or replace function test.test_case_fsm_state_machine_create_with_invalid_id() returns void as
+create or replace function lib_test.test_case_fsm_state_machine_create_with_invalid_id() returns void as
 $$
 begin
 
@@ -390,11 +391,11 @@ begin
   exception
     when foreign_key_violation then return;
   end;
-  perform test.fail('should not go there');
+  perform lib_test.fail('should not go there');
 end;
 $$ language plpgsql;
 
-create or replace function test.test_case_fsm_state_machine_delete() returns void as $$
+create or replace function lib_test.test_case_fsm_state_machine_delete() returns void as $$
 declare
   state_machine__id uuid;
 begin
@@ -404,14 +405,14 @@ begin
 end;
 $$ language plpgsql;
 
-create or replace function test.test_case_fsm_state_machine_delete_with_invalid_id_should_not_fail() returns void as $$
+create or replace function lib_test.test_case_fsm_state_machine_delete_with_invalid_id_should_not_fail() returns void as $$
 begin
   -- this operation must be idempotent
   perform lib_fsm.state_machine_delete(public.gen_random_uuid());
 end;
 $$ language plpgsql;
 
-create or replace function test.test_case_fsm_state_machine_get() returns void as
+create or replace function lib_test.test_case_fsm_state_machine_get() returns void as
 $$
 declare
   state record;
@@ -423,12 +424,12 @@ begin
     )
   );
 
-  perform test.assertTrue(state.name = 'drafted');
-  perform test.assertTrue(state.description is null);
+  perform lib_test.assert_true(state.name = 'drafted');
+  perform lib_test.assert_true(state.description is null);
 end;
 $$ language plpgsql;
 
-create or replace function test.test_case_fsm_state_machine_get_unknown_machine() returns void as
+create or replace function lib_test.test_case_fsm_state_machine_get_unknown_machine() returns void as
 $$
 declare
   state record;
@@ -440,13 +441,13 @@ begin
     -- 404
     when sqlstate '42P01' then return;
   end;
-  perform test.fail('should not go there');
+  perform lib_test.fail('should not go there');
 end;
 $$ language plpgsql;
 
 ----------------------------- STATE MACHINE TRANSITION ------------------------------------
 
-create or replace function test.test_case_fsm_state_machine_transition_check() returns void as
+create or replace function lib_test.test_case_fsm_state_machine_transition_check() returns void as
 $$
 declare
   state_machine__id uuid;
@@ -455,13 +456,13 @@ begin
 
   state_machine__id = lib_fsm.state_machine_create('081d831f-8f88-4650-aebe-4360599d4bdc'::uuid);
   state = lib_fsm.state_machine_transition(state_machine__id, 'create');
-  perform test.assertTrue(state.name = 'awaiting_payment');
+  perform lib_test.assert_true(state.name = 'awaiting_payment');
   state = lib_fsm.state_machine_get(state_machine__id);
-  perform test.assertTrue(state.name = 'awaiting_payment');
+  perform lib_test.assert_true(state.name = 'awaiting_payment');
 end;
 $$ language plpgsql;
 
-create or replace function test.test_case_fsm_state_machine_transition_check_dry_run() returns void as
+create or replace function lib_test.test_case_fsm_state_machine_transition_check_dry_run() returns void as
 $$
 declare
   state_machine__id uuid;
@@ -470,13 +471,13 @@ begin
   -- use the state machine from fsm/_fixtures
   state_machine__id = lib_fsm.state_machine_create('081d831f-8f88-4650-aebe-4360599d4bdc'::uuid);
   state = lib_fsm.state_machine_transition(state_machine__id, 'create', true);
-  perform test.assertTrue(state.name = 'awaiting_payment');
+  perform lib_test.assert_true(state.name = 'awaiting_payment');
   state = lib_fsm.state_machine_get(state_machine__id);
-  perform test.assertTrue(state.name = 'starting');
+  perform lib_test.assert_true(state.name = 'starting');
 end;
 $$ language plpgsql;
 
-create or replace function test.test_case_fsm_state_machine_transition_invalid_event() returns void as
+create or replace function lib_test.test_case_fsm_state_machine_transition_invalid_event() returns void as
 $$
 declare
   state_machine__id uuid;
@@ -489,26 +490,28 @@ begin
   exception
     when sqlstate 'P0001' then return;
   end;
-  perform test.fail('should not go there');
+  perform lib_test.fail('should not go there');
 end;
 $$ language plpgsql;
 
 
-create or replace function test.test_case_fsm_state_machine_get_transitions_for_unknown_state_machine() returns void as
+create or replace function lib_test.test_case_fsm_state_machine_get_transitions_for_unknown_state_machine() returns void as
 $$
 declare
-  transitions jsonb;
+    transitions jsonb;
 begin
-    select jsonb_agg(t) into transitions from lib_fsm.state_machine_get_next_transitions('081d831f-0000-0000-0000-4360599d4bdc') t;
-    perform test.assertNull('a non-exisiting state machine should not have any transitions', transitions);
+    select jsonb_agg(t)
+    into transitions
+    from lib_fsm.state_machine_get_next_transitions('081d831f-0000-0000-0000-4360599d4bdc') t;
+    perform lib_test.assert_null(transitions, 'a non-exisiting state machine should not have any transitions');
 end;
 $$ language plpgsql;
 
-create or replace function test.test_case_fsm_state_machine_get_next_transitions() returns void as
+create or replace function lib_test.test_case_fsm_state_machine_get_next_transitions() returns void as
 $$
 declare
-  state_machine__id uuid;
-  transitions jsonb;
+    state_machine__id uuid;
+    transitions       jsonb;
 begin
     -- create a state machine directly from an abstract_state_machine ("awaiting_payment")
     state_machine__id = lib_fsm.state_machine_create('081d831f-8f88-4650-aebe-4360599d4abb'::uuid);
@@ -516,7 +519,124 @@ begin
     select jsonb_agg(t) into transitions from lib_fsm.state_machine_get_next_transitions(state_machine__id) t;
 
     -- transitions should old
-    perform test.assertEqual(transitions, '[{"abstract_machine__id":"081d831f-8f88-4650-aebe-4360599d4bdc","from_abstract_state__id":"081d831f-8f88-4650-aebe-4360599d4abb","from_state_name":"awaiting_payment","from_state_description":null,"event":"pay","description":null,"to_abstract_state__id":"081d831f-8f88-4650-aebe-4360599d4acc","to_state_name":"awaiting_shipment","to_state_description":null},
- {"abstract_machine__id":"081d831f-8f88-4650-aebe-4360599d4bdc","from_abstract_state__id":"081d831f-8f88-4650-aebe-4360599d4abb","from_state_name":"awaiting_payment","from_state_description":null,"event":"cancel","description":null,"to_abstract_state__id":"081d831f-8f88-4650-aebe-4360599d4add","to_state_name":"canceled","to_state_description":null}]'::jsonb);
+    perform lib_test.assert_equal(transitions, '[
+      {
+        "abstract_machine__id": "081d831f-8f88-4650-aebe-4360599d4bdc",
+        "from_abstract_state__id": "081d831f-8f88-4650-aebe-4360599d4abb",
+        "from_state_name": "awaiting_payment",
+        "from_state_description": null,
+        "event": "pay",
+        "description": null,
+        "to_abstract_state__id": "081d831f-8f88-4650-aebe-4360599d4acc",
+        "to_state_name": "awaiting_shipment",
+        "to_state_description": null
+      },
+      {
+        "abstract_machine__id": "081d831f-8f88-4650-aebe-4360599d4bdc",
+        "from_abstract_state__id": "081d831f-8f88-4650-aebe-4360599d4abb",
+        "from_state_name": "awaiting_payment",
+        "from_state_description": null,
+        "event": "cancel",
+        "description": null,
+        "to_abstract_state__id": "081d831f-8f88-4650-aebe-4360599d4add",
+        "to_state_name": "canceled",
+        "to_state_description": null
+      }
+    ]'::jsonb);
+end;
+$$ language plpgsql;
+
+
+----------------------------- STATE MACHINE RECORDED EVENTS ------------------------------------
+
+create or replace function lib_test.test_case_fsm_init_event_should_be_historically_saved() returns void as
+$$
+declare
+    state_machine__id$ uuid;
+    state$             record;
+begin
+
+    state_machine__id$ = lib_fsm.state_machine_create('081d831f-8f88-4650-aebe-4360599d4bdc'::uuid);
+
+    select event_name, event_description, state_name, state_description into state$
+    from lib_fsm.state_machine_events sme
+    where sme.state_machine__id = state_machine__id$;
+
+    perform lib_test.assert_null(state$.event_name, format($_$event id for state machine %s should be null, because it's the initial event$_$, state_machine__id$));
+    perform lib_test.assert_null(state$.event_description, $_$event description should be null$_$);
+    perform lib_test.assert_equal(state$.state_name, 'starting', format($_$event id for state machine %s$_$, state_machine__id$));
+    perform lib_test.assert_null(state$.state_description, $_$state description should be null$_$);
+end ;
+$$ language plpgsql;
+
+create or replace function lib_test.test_case_fsm_transition_event_should_be_historically_saved() returns void as
+$$
+declare
+    state_machine__id$ uuid;
+    state$             jsonb;
+begin
+
+    state_machine__id$ = lib_fsm.state_machine_create('081d831f-8f88-4650-aebe-4360599d4bdc'::uuid);
+    perform lib_fsm.state_machine_transition(state_machine__id$, 'create');
+
+    -- both previous operation will have the SAME created_at, so we cannot order on it
+    -- so we concat everything and extract the second line from the log
+
+    with cte as (select sme.event_name, sme.state_name, sme.event_description, sme.state_description
+                 from lib_fsm.state_machine_events sme
+                 where sme.state_machine__id = state_machine__id$)
+    select jsonb_agg(cte)
+    into state$
+    from cte;
+
+    perform lib_test.assert_equal(state$->1, '{"event_name": "create", "state_name": "awaiting_payment", "event_description": null, "state_description": null}'::jsonb);
+end;
+$$ language plpgsql;
+
+create or replace function lib_test.test_case_fsm_dry_run_should_not_be_historically_saved() returns void as
+$$
+declare
+    state_machine__id$ uuid;
+    state$ jsonb;
+begin
+    -- use the state machine from fsm/_fixtures
+    state_machine__id$ = lib_fsm.state_machine_create('081d831f-8f88-4650-aebe-4360599d4bdc'::uuid);
+    perform lib_fsm.state_machine_transition(state_machine__id$, 'create', true);
+
+    with cte as (select sme.event_name, sme.state_name, sme.event_description, sme.state_description
+                 from lib_fsm.state_machine_events sme
+                 where sme.state_machine__id = state_machine__id$)
+    select jsonb_agg(cte)
+    into state$
+    from cte;
+
+    perform lib_test.assert_equal(state$, '[{"event_name": null, "state_name": "starting", "event_description": null, "state_description": null}]'::jsonb);
+end;
+$$ language plpgsql;
+
+create or replace function lib_test.test_case_fsm_invalid_event_should_not_be_historically_saved() returns void as
+$$
+declare
+    state_machine__id$ uuid;
+    state$ jsonb;
+begin
+    -- use the state machine from fsm/_fixtures
+    state_machine__id$ = lib_fsm.state_machine_create('081d831f-8f88-4650-aebe-4360599d4bdc'::uuid);
+
+    begin
+        perform lib_fsm.state_machine_transition(state_machine__id$, 'toto');
+    exception
+        when sqlstate 'P0001' then
+            with cte as (select sme.event_name, sme.state_name, sme.event_description, sme.state_description
+                         from lib_fsm.state_machine_events sme
+                         where sme.state_machine__id = state_machine__id$)
+            select jsonb_agg(cte)
+            into state$
+            from cte;
+
+            perform lib_test.assert_equal(state$, '[{"event_name": null, "state_name": "starting", "event_description": null, "state_description": null}]'::jsonb);
+            return;
+    end;
+    perform lib_test.fail('should not go there');
 end;
 $$ language plpgsql;

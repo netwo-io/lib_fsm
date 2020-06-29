@@ -2,12 +2,17 @@
 
 === Features
 
-- [x] User-defined state support: let your user specify their own state machine while still ensuring consistency
-- [x] Multi-tenant: each row/column from your table can reference a state in another state machine
-- [x] Historical support: successful state changes are recorded
-- [x] Complete API
-- [x] Fully tested
-- [x] #_visual_graph_generation[Visual graph generation]
+[x] User-defined state support: let your user specify their own state machine while still ensuring consistency
+
+[x] Multi-tenant: each row/column from your table can reference a state in another state machine
+
+[x] Historical support: successful state changes are recorded
+
+[x] Complete API
+
+[x] Fully tested
+
+[x] Visual graph generation
 
 === Convention
 
@@ -21,11 +26,6 @@ A transition is a tuple of a start (previous) `state`, the `event` that will tri
 An `abstract state machine` describe a `state machine`, its `(abstract) state` and `(abstract) transition`.
 
 A `state machine` is an instance of an `abstract state machine` and points to an `abstract state`, thus an `abstract state machine`.
-
-
-[caption="Figure 1: ",link=_model.png]
-image::_model.png[FSM_lib model,1644,484]
-
 A consistent naming convention is essential to build a futur-proof project.
 Use https://github.com/FGRibreau/sql-convention/[shared SQL convention] as well as an SQL linter.
 
@@ -50,11 +50,8 @@ Examples: opened, loading, loaded, recorded, closed, locked, dumped, shipped, fi
 Examples: start, open, close, lock, unlock, load, unload, dump, ship, fail, enter, enable, disable, run, return, order, cancel, refund, confirm
 
 
-
 === Usage
 === API
-
-
 ==== What was tried before current implementation
 
 > Why did they do that?
@@ -71,7 +68,7 @@ A trigger on every tables that listen to the table state column and that have a 
 
 Rejected.
 
-====Try #2 Composite type
+==== Try #2 Composite type
 
 The previous idea but instead of a custom type, we rely on a composite type `(last_state, abstract_machine__id)`.
 
@@ -80,7 +77,7 @@ The previous idea but instead of a custom type, we rely on a composite type `(la
 * Does not need column names convention
 - Cons:
 * No foreign key on abstract_machine__id (ensure referential integrity with a trigger)
-* No foreign key on abstract_machine__id (ensuring referential integrity with a trigger would require a schema introspection to retrieve all columns of type lib_fsm.state_machine.abstract_machine__id === old.abstract_machine__id)
+* No foreign key on abstract_machine\__id (ensuring referential integrity with a trigger would require a schema introspection to retrieve all columns of type lib_fsm.state_machine.abstract_machine\__id === old.abstract_machine__id)
 
 Rejected.
 
@@ -108,7 +105,7 @@ PGPASSWORD=$USER_PASSWORD psql -qtAX  -U $USER --password -c "select lib_fsm.sta
 - [ ] add support for versioning
 - [ ] add support for transition `properties`
 - [ ] add support for transition `triggers`: 0-N triggers, what events should automatically trigger the transition
-- [ ] add support for transition `conditions`: 0-N (cf: [https://github.com/FGRibreau/ui-predicate/]ui-predicate)), requires `lib_rule_engine` first
+- [ ] add support for transition `conditions`: 0-N (cf: https://github.com/FGRibreau/ui-predicate/[ui-predicate]), requires implementing `lib_rule_engine` first
 - [ ] add support for transition `pre_conditions`: 0-N, these pre-conditions are run before displaying available events from 'from_state'
 post_actions (0-N, what to do once we switched to `to_state`) <= WONT_IMPLEMENT
 

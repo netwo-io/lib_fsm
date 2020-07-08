@@ -1,5 +1,3 @@
-
-
 create or replace view lib_fsm.state_machine_events as
 select sme.state_machine__id,
        sme.created_at,

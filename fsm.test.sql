@@ -4,10 +4,10 @@
 
 create or replace function lib_test.test_case_fsm_abstract_state_machine_create() returns void as $$
 declare
-    abstract_machine__id uuid;
+  abstract_machine__id uuid;
 begin
-    abstract_machine__id = lib_fsm.abstract_machine_create('creation_order', null);
-    perform lib_test.assert_not_null(abstract_machine__id, 'abstract machine not created');
+  abstract_machine__id = lib_fsm.abstract_machine_create('creation_order', null);
+  perform lib_test.assert_not_null(abstract_machine__id, 'abstract machine not created');
 end;
 $$ language plpgsql;
 
@@ -27,7 +27,9 @@ begin
   begin
     perform lib_fsm.abstract_machine_update(public.gen_random_uuid(), 'creation_order2', 'description');
   exception
-    when SQLSTATE '42P01' then return;
+    when SQLSTATE '42P01' then
+      perform lib_test.assert_equal(sqlerrm, 'abstract_machine__id not found');
+      return;
   end;
   perform lib_test.fail('should not go there');
 end;
@@ -57,7 +59,9 @@ begin
     abstract_machine__id = lib_fsm.abstract_machine_create('creation_order', null);
     perform lib_fsm.abstract_machine_update(abstract_machine__id, null, '');
   exception
-    when not_null_violation then return;
+    when not_null_violation then
+      perform lib_test.assert_equal(sqlerrm, 'null value in column "name" violates not-null constraint');
+      return;
   end;
   perform lib_test.fail('should not go there');
 end;
@@ -72,7 +76,9 @@ begin
     abstract_machine__id = lib_fsm.abstract_machine_create('creation_order', null);
     perform lib_fsm.abstract_machine_update(abstract_machine__id, 'aa', '');
   exception
-    when check_violation then return;
+    when check_violation then
+      perform lib_test.assert_equal(sqlerrm, 'new row for relation "abstract_state_machine" violates check constraint "abstract_state_machine_name_check"');
+      return;
 end; perform lib_test.fail('should not go there');
 end;
 $$ language plpgsql;
@@ -82,7 +88,9 @@ begin
   begin
     perform lib_fsm.abstract_machine_create(null, '');
   exception
-    when not_null_violation then return;
+    when not_null_violation then
+      perform lib_test.assert_equal(sqlerrm, 'null value in column "name" violates not-null constraint');
+      return;
   end;
   perform lib_test.fail('should not go there');
 end;
@@ -94,7 +102,9 @@ begin
   begin
     perform lib_fsm.abstract_machine_create('aa', '');
   exception
-    when check_violation then return;
+    when check_violation then
+      perform lib_test.assert_equal(sqlerrm, 'new row for relation "abstract_state_machine" violates check constraint "abstract_state_machine_name_check"');
+      return;
 end; perform lib_test.fail('should not go there');
 end;
 $$ language plpgsql;
@@ -128,7 +138,9 @@ begin
     -- will raise before it's the first abstract state of the abstract machine and that initial=false (default)
     perform lib_fsm.abstract_state_create(abstract_machine__id, 'drafted', 'command currently being draft');
   exception
-    when check_violation then return;
+    when check_violation then
+      perform lib_test.assert_equal(sqlerrm, 'a state machine must have one initial state. none found.');
+      return;
   end;
   perform lib_test.fail('should not go there');
 end;
@@ -147,7 +159,9 @@ begin
     -- will raise before it's the second abstract state with initial=true for the same abstract machine
     perform lib_fsm.abstract_state_create(abstract_machine__id, 'signed', 'command currently being draft', 'true');
   exception
-    when unique_violation then return;
+    when unique_violation then
+      perform lib_test.assert_equal(sqlerrm, 'duplicate key value violates unique constraint "abstract_state_abstract_machine_id_is_initial"');
+      return;
   end;
   perform lib_test.fail('should not go there');
 end;
@@ -163,7 +177,9 @@ begin
       null,
       'command currently being draft', true);
   exception
-    when not_null_violation then return;
+    when not_null_violation then
+      perform lib_test.assert_equal(sqlerrm, 'domain lib_fsm.abstract_state_identifier does not allow null values');
+      return;
   end; perform lib_test.fail('should not go there');
 end;
 $$ language plpgsql;
@@ -178,7 +194,9 @@ begin
       'aa',
       'command currently being draft', true);
   exception
-    when check_violation then return;
+    when check_violation then
+      perform lib_test.assert_equal(sqlerrm, 'value for domain lib_fsm.abstract_state_identifier violates check constraint "abstract_state_identifier_check"');
+      return;
   end; perform lib_test.fail('should not go there');
 end;
 $$ language plpgsql;
@@ -212,7 +230,9 @@ begin
       null,
       lib_fsm.abstract_state_create(abstract_machine__id, 'submitted'));
   exception
-    when not_null_violation then return;
+    when not_null_violation then
+      perform lib_test.assert_equal(sqlerrm, 'null value in column "event" violates not-null constraint');
+      return;
   end;
   perform lib_test.fail('should not go there');
 end;
@@ -245,7 +265,9 @@ begin
       'send',
       lib_fsm.abstract_state_create(abstract_machine__id, 'drafted', '', true));
   exception
-    when check_violation then return;
+    when check_violation then
+      perform lib_test.assert_equal(sqlerrm, 'both from and to state must have the same machine_id');
+      return;
   end;
   perform lib_test.fail('should not go there');
 end;
@@ -264,7 +286,9 @@ begin
       'send',
       null);
   exception
-    when check_violation then return;
+    when check_violation then
+      perform lib_test.assert_equal(sqlerrm, 'both from and to state must have the same machine_id');
+      return;
   end;
   perform lib_test.fail('should not go there');
 end;
@@ -283,7 +307,9 @@ begin
       'send',
       null);
   exception
-    when check_violation then return;
+    when check_violation then
+      perform lib_test.assert_equal(sqlerrm, 'both from and to state must have the same machine_id');
+      return;
   end;
   perform lib_test.fail('should not go there');
 end;
@@ -304,7 +330,9 @@ begin
       'submit',
       lib_fsm.abstract_state_create(abstract_machine__id2, 'submitted'));
   exception
-    when check_violation then return;
+    when check_violation then
+      perform lib_test.assert_equal(sqlerrm, 'a state machine must have one initial state. none found.');
+      return;
   end;
   perform lib_test.fail('should not go there');
 end;
@@ -346,7 +374,9 @@ begin
       'submit',
       lib_fsm.abstract_state_create(abstract_machine__id, 'sent'));
   exception
-    when unique_violation then return;
+    when unique_violation then
+      perform lib_test.assert_equal(sqlerrm, 'duplicate key value violates unique constraint "abstract_transition_from_abstract_state__id_event_key"');
+      return;
   end;
   perform lib_test.fail('should not go there');
 end;
@@ -389,7 +419,9 @@ begin
   begin
     perform lib_fsm.state_machine_create(public.gen_random_uuid());
   exception
-    when foreign_key_violation then return;
+    when foreign_key_violation then
+      perform lib_test.assert_equal(sqlerrm, 'insert or update on table "state_machine" violates foreign key constraint "state_machine_abstract_state__id_fkey"');
+      return;
   end;
   perform lib_test.fail('should not go there');
 end;
@@ -439,7 +471,9 @@ begin
     state = lib_fsm.state_machine_get(public.gen_random_uuid());
   exception
     -- 404
-    when sqlstate '42P01' then return;
+    when sqlstate '42P01' then
+      perform lib_test.assert_equal(sqlerrm, 'state_machine__id not found');
+      return;
   end;
   perform lib_test.fail('should not go there');
 end;
@@ -486,9 +520,11 @@ begin
   begin
     -- use the state machine from fsm/_fixtures
     state_machine__id = lib_fsm.state_machine_create('081d831f-8f88-4650-aebe-4360599d4bdc'::uuid);
-    perform lib_fsm.state_machine_transition(state_machine__id, 'toto');
+    perform lib_fsm.state_machine_transition(state_machine__id, 'invalid_event');
   exception
-    when sqlstate 'P0001' then return;
+    when sqlstate 'P0001' then
+      perform lib_test.assert_equal(sqlerrm, 'Invalid event for this machine');
+      return;
   end;
   perform lib_test.fail('should not go there');
 end;

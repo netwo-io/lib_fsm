@@ -479,6 +479,32 @@ begin
 end;
 $$ language plpgsql;
 
+create or replace function lib_test.test_case_fsm_state_machine_does_not_belong_to_abstract() returns void as
+$$
+declare
+  state record;
+begin
+
+  begin
+    state = lib_fsm.state_machine_belongs_to_abstract_machine('603c3f8b-17a9-4cb6-b71e-ff69b4325eb9'::uuid, '081d831f-8f88-4650-aebe-4360599d4bdd'::uuid);
+  exception
+    when check_violation then
+      perform lib_test.assert_equal(sqlerrm, 'state machine is not bound to required abstract machine');
+      return;
+  end;
+  perform lib_test.fail('state machine not belonging to abstract machine family should raise an error');
+end;
+$$ language plpgsql;
+
+create or replace function lib_test.test_case_fsm_state_machine_does_belong_to_abstract() returns void as
+$$
+declare
+  state record;
+begin
+  perform lib_test.assert_equal(lib_fsm.state_machine_belongs_to_abstract_machine('603c3f8b-17a9-4cb6-b71e-ff69b4325eb9'::uuid, '081d831f-8f88-4650-aebe-4360599d4bdc'::uuid), true);
+end;
+$$ language plpgsql;
+
 ----------------------------- STATE MACHINE TRANSITION ------------------------------------
 
 create or replace function lib_test.test_case_fsm_state_machine_transition_check() returns void as

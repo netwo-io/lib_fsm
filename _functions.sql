@@ -1,8 +1,7 @@
-create or replace function lib_fsm.state_machine_create(abstract_state_machine__id_or_abstract_state__id$ uuid) returns uuid as
+create or replace function lib_fsm.state_machine_create(abstract_state_machine__id_or_abstract_state__id$ uuid, state_machine__id$ uuid default public.gen_random_uuid()) returns uuid as
 $$
 declare
   initial_abstract_state__id$ uuid;
-  state_machine__id$          uuid;
 begin
 
   -- a) if abstract_state_machine__id_or_abstract_state__id$ is an abstract_machine__id, then find the default state machine state (abstract_state__id)
@@ -19,8 +18,7 @@ begin
   end if;
 
   insert into lib_fsm.state_machine (state_machine__id, abstract_state__id)
-  values (default, initial_abstract_state__id$)
-  returning state_machine__id into state_machine__id$;
+    values (state_machine__id$, initial_abstract_state__id$);
 
   -- history management (see why we are doing it this way in _state_machine_store_event())
   perform lib_fsm._state_machine_store_event(
@@ -51,17 +49,28 @@ begin
 end;
 $$ language plpgsql;
 
-create or replace function lib_fsm.state_machine_get(state_machine__id$ uuid) returns record as
+create type lib_fsm.state_machine_state as (abstract_state__id uuid, name lib_fsm.abstract_state_identifier, description text, created_at timestamptz);
+
+create or replace function lib_fsm.state_machine_get(state_machine__id$ uuid) returns lib_fsm.state_machine_state as
 $$
 declare
-  state record;
+  state lib_fsm.state_machine_state;
 begin
 
-  select abstract_state__id, name, description
-  into state
-  from lib_fsm.state_machine
-    inner join lib_fsm.abstract_state using (abstract_state__id)
-  where state_machine.state_machine__id = state_machine__id$;
+  select abstract_state.abstract_state__id, abstract_state.name, abstract_state.description, events_subq.created_at
+    into state
+    from lib_fsm.state_machine
+      inner join lib_fsm.abstract_state using (abstract_state__id)
+      inner join (
+        select
+          fsm_event.state_machine__id,
+          fsm_event.abstract_state__id,
+          max(fsm_event.created_at) as created_at
+        from lib_fsm.state_machine_event as fsm_event
+          group by fsm_event.state_machine__id, fsm_event.abstract_state__id
+      ) as events_subq
+      on events_subq.state_machine__id = state_machine.state_machine__id and events_subq.abstract_state__id = abstract_state.abstract_state__id
+    where state_machine.state_machine__id = state_machine__id$;
 
   if not found then
     raise sqlstate '42P01' using
@@ -71,7 +80,7 @@ begin
 
   return state;
 end;
-$$ language plpgsql;
+$$ immutable security definer language plpgsql;
 
 -- Return a mermaid graph
 create or replace function lib_fsm.state_machine_get_mermaid(abstract_state_machine__id$ uuid) returns text as
@@ -91,7 +100,7 @@ begin
 
   return concat('stateDiagram\n\t', diagram);
 end;
-$$ language plpgsql;
+$$ immutable language plpgsql;
 
 create or replace function lib_fsm.state_machine_delete(state_machine__id$ uuid) returns void as
 $$
@@ -155,7 +164,7 @@ begin
         where sm.state_machine__id = state_machine__id$
     );
 end;
-$$ language plpgsql;
+$$ immutable security definer language plpgsql;
 
 create function lib_fsm._state_machine_store_event(abstract_state__id$ uuid, state_machine__id$ uuid, event$ lib_fsm.event_identifier) returns void as
 $$

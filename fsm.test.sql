@@ -447,14 +447,14 @@ $$ language plpgsql;
 create or replace function lib_test.test_case_fsm_state_machine_get() returns void as
 $$
 declare
-  state record;
+  state              lib_fsm.state_machine_state;
+  state_machine__id$ uuid;
 begin
 
-  state = lib_fsm.state_machine_get(
-    lib_fsm.state_machine_create(
-      lib_fsm.abstract_state_create(lib_fsm.abstract_machine_create('creation_order', null), 'drafted', null, true)
-    )
+  state_machine__id$ = lib_fsm.state_machine_create(
+    lib_fsm.abstract_state_create(lib_fsm.abstract_machine_create('creation_order', null), 'drafted', null, true)
   );
+  state = lib_fsm.state_machine_get(state_machine__id$);
 
   perform lib_test.assert_true(state.name = 'drafted');
   perform lib_test.assert_true(state.description is null);

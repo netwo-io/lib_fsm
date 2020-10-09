@@ -27,7 +27,7 @@ begin
   begin
     perform lib_fsm.abstract_machine_update(public.gen_random_uuid(), 'creation_order2', 'description');
   exception
-    when SQLSTATE '42P01' then
+    when sqlstate '42P01' then
       perform lib_test.assert_equal(sqlerrm, 'abstract_machine__id not found');
       return;
   end;

@@ -126,6 +126,8 @@ begin
   where sm.state_machine__id = state_machine__id$
     and abtr.event = event$;
 
+  raise log '';
+
   -- if no next state => raise an exception
   if not found then
     raise sqlstate 'P0001' using

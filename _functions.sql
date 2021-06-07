@@ -111,14 +111,14 @@ begin
 end;
 $$ language plpgsql;
 
-create function lib_fsm.state_machine_transition(state_machine__id$ uuid, event$ lib_fsm.event_identifier, dry_run$ boolean default false) returns record as
+create function lib_fsm.state_machine_transition(state_machine__id$ uuid, event$ lib_fsm.event_identifier, dry_run$ boolean default false) returns lib_fsm.state_machine_state as
 $$
 declare
-  to_state record;
+  to_state lib_fsm.state_machine_state;
 begin
 
   -- ensure event is a valid next state for `state_machine__id`
-  select ast.abstract_state__id, ast.name, ast.description
+  select ast.abstract_state__id, ast.name, ast.description, now()
   into to_state
   from lib_fsm.state_machine sm
     inner join lib_fsm.abstract_transition abtr on abtr.from_abstract_state__id = sm.abstract_state__id

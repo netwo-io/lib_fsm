@@ -620,12 +620,11 @@ begin
 
     state_machine__id$ = lib_fsm.state_machine_create('081d831f-8f88-4650-aebe-4360599d4bdc'::uuid);
 
-    select event_name, event_description, state_name, state_description into state$
+    select event_name, state_name, state_description into state$
     from lib_fsm.state_machine_events sme
     where sme.state_machine__id = state_machine__id$;
 
     perform lib_test.assert_null(state$.event_name, format($_$event id for state machine %s should be null, because it's the initial event$_$, state_machine__id$));
-    perform lib_test.assert_null(state$.event_description, $_$event description should be null$_$);
     perform lib_test.assert_equal(state$.state_name, 'starting', format($_$event id for state machine %s$_$, state_machine__id$));
     perform lib_test.assert_null(state$.state_description, $_$state description should be null$_$);
 end ;
@@ -644,14 +643,14 @@ begin
     -- both previous operation will have the SAME created_at, so we cannot order on it
     -- so we concat everything and extract the second line from the log
 
-    with cte as (select sme.event_name, sme.state_name, sme.event_description, sme.state_description
+    with cte as (select sme.event_name, sme.state_name, sme.state_description
                  from lib_fsm.state_machine_events sme
                  where sme.state_machine__id = state_machine__id$)
     select jsonb_agg(cte)
     into state$
     from cte;
 
-    perform lib_test.assert_equal(state$->1, '{"event_name": "create", "state_name": "awaiting_payment", "event_description": null, "state_description": null}'::jsonb);
+    perform lib_test.assert_equal(state$->1, '{"event_name": "create", "state_name": "awaiting_payment", "state_description": null}'::jsonb);
 end;
 $$ language plpgsql;
 
@@ -665,14 +664,14 @@ begin
     state_machine__id$ = lib_fsm.state_machine_create('081d831f-8f88-4650-aebe-4360599d4bdc'::uuid);
     perform lib_fsm.state_machine_transition(state_machine__id$, 'create', true);
 
-    with cte as (select sme.event_name, sme.state_name, sme.event_description, sme.state_description
+    with cte as (select sme.event_name, sme.state_name, sme.state_description
                  from lib_fsm.state_machine_events sme
                  where sme.state_machine__id = state_machine__id$)
     select jsonb_agg(cte)
     into state$
     from cte;
 
-    perform lib_test.assert_equal(state$, '[{"event_name": null, "state_name": "starting", "event_description": null, "state_description": null}]'::jsonb);
+    perform lib_test.assert_equal(state$, '[{"event_name": null, "state_name": "starting", "state_description": null}]'::jsonb);
 end;
 $$ language plpgsql;
 
@@ -689,14 +688,14 @@ begin
         perform lib_fsm.state_machine_transition(state_machine__id$, 'toto');
     exception
         when sqlstate 'P0001' then
-            with cte as (select sme.event_name, sme.state_name, sme.event_description, sme.state_description
+            with cte as (select sme.event_name, sme.state_name, sme.state_description
                          from lib_fsm.state_machine_events sme
                          where sme.state_machine__id = state_machine__id$)
             select jsonb_agg(cte)
             into state$
             from cte;
 
-            perform lib_test.assert_equal(state$, '[{"event_name": null, "state_name": "starting", "event_description": null, "state_description": null}]'::jsonb);
+            perform lib_test.assert_equal(state$, '[{"event_name": null, "state_name": "starting", "state_description": null}]'::jsonb);
             return;
     end;
     perform lib_test.fail('should not go there');

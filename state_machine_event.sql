@@ -1,5 +1,6 @@
 create table lib_fsm.state_machine_event
 (
+    event_id            serial                            primary key,
     state_machine__id   uuid                              not null references lib_fsm.state_machine (state_machine__id) on delete cascade on update cascade,
     abstract_state__id  uuid                              not null references lib_fsm.abstract_state (abstract_state__id) on delete restrict on update restrict,
     event               varchar(30)                       null,

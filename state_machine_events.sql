@@ -1,5 +1,6 @@
 create or replace view lib_fsm.state_machine_events as
-select sme.state_machine__id,
+select sme.event_id,
+       sme.state_machine__id,
        sme.created_at,
 
        -- we have to use state_machine_event recorded state because the underlying abstract_state might have been removed

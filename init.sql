@@ -1,6 +1,8 @@
 drop schema if exists lib_fsm cascade;
 create schema lib_fsm;
 grant usage on schema lib_fsm to public;
+grant usage, select on all sequences in schema lib_fsm to public;
+alter default privileges in schema lib_fsm grant usage, select on sequences to public;
 set search_path = pg_catalog;
 
 -- type domains (private)

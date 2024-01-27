@@ -1,5 +1,8 @@
 == Finite State Machine (FSM) library for PostgreSQL (PL/pgSQL)
 
+lib_fsm is not maintained anymore at Netwo but its maintainer continue to work on it [here](https://github.com/FGRibreau/lib_fsm/)
+
+
 === Features
 
 [x] User-defined state support: let your user specify their own state machine while still ensuring consistency
